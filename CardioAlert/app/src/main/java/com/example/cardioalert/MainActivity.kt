@@ -6,10 +6,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.cardioalert.databinding.ActivityMainBinding
 import com.google.gson.Gson
+import info.mqtt.android.service.Ack
+import info.mqtt.android.service.MqttAndroidClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttToken
 import org.eclipse.paho.client.mqttv3.MqttClient
@@ -34,13 +35,15 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        mqttAndroidClient = MqttAndroidClient(applicationContext, mqttBrokerUrl, clientId)
+        mqttAndroidClient = MqttAndroidClient(applicationContext, mqttBrokerUrl, clientId, Ack.AUTO_ACK)
         val mqttConnectOptions = MqttConnectOptions().apply {
             isCleanSession = true  // Ensures clean session (no cached data)
             connectionTimeout = 30  // Connection timeout in seconds
             keepAliveInterval = 20  // Send ping every 20 seconds to keep the connection alive
-            isAutomaticReconnect = true  // Automatically reconnect if the connection is lost
+            isAutomaticReconnect = false  // Automatically reconnect if the connection is lost
         }
+        mqttConnectOptions.userName = "name"
+        mqttConnectOptions.password = "password".toCharArray()
         mqttConnectOptions.mqttVersion = MqttConnectOptions.MQTT_VERSION_3_1_1
 
         connectToBroker(mqttConnectOptions)

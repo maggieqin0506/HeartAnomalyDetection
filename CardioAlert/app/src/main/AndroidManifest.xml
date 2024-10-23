@@ -34,7 +34,7 @@
 
         <!-- MQTT Service Declaration -->
         <service
-            android:name="org.eclipse.paho.android.service.MqttService"
+            android:name="info.mqtt.android.service.MqttService"
             android:enabled="true"
             android:exported="false" />
 

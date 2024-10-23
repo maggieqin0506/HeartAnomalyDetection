@@ -2,6 +2,8 @@ pluginManagement {
     repositories {
         google()
         mavenCentral()
+        maven("https://repo.eclipse.org/content/repositories/paho-snapshots/")
+        maven("https://jitpack.io")
         gradlePluginPortal()
     }
 }
@@ -10,6 +12,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven("https://repo.eclipse.org/content/repositories/paho-snapshots/")
+        maven("https://jitpack.io")
     }
 }
 
