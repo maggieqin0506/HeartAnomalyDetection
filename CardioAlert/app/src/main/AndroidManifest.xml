@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Internet access permission -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Keep the CPU running even when the screen is off -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.ACCESS_INTERNET_STATE" />
+    <!-- Corrected: Permission to access the network state -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Permission to read phone state (may not be needed if you're not using phone state) -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
@@ -16,19 +21,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CardioAlert"
         tools:targetApi="31">
+
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- MQTT Service Declaration -->
         <service
             android:name="org.eclipse.paho.android.service.MqttService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
 
     </application>
 
