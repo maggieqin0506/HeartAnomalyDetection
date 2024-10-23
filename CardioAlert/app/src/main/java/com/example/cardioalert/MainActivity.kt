@@ -37,14 +37,14 @@ class MainActivity : AppCompatActivity() {
         mqttAndroidClient = MqttAndroidClient(applicationContext, mqttBrokerUrl, clientId)
         val mqttConnectOptions = MqttConnectOptions().apply {
             isCleanSession = true  // Ensures clean session (no cached data)
-            connectionTimeout = 10  // Connection timeout in seconds
+            connectionTimeout = 30  // Connection timeout in seconds
             keepAliveInterval = 20  // Send ping every 20 seconds to keep the connection alive
             isAutomaticReconnect = true  // Automatically reconnect if the connection is lost
         }
+        mqttConnectOptions.mqttVersion = MqttConnectOptions.MQTT_VERSION_3_1_1
 
         connectToBroker(mqttConnectOptions)
         startUpdatingFakeData()
-//        testWithoutNetwork()
     }
 
     private fun connectToBroker(options: MqttConnectOptions) {
@@ -57,7 +57,13 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
                     Log.e("MQTT", "Failed to connect to broker: ${exception?.message}")
+                    // Retry connection after a delay
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        delay(5000)  // Wait for 5 seconds before retrying
+                        connectToBroker(options)  // Retry connecting to the broker
+                    }
                 }
+
             })
         } catch (e: MqttException) {
             e.printStackTrace()
@@ -101,18 +107,33 @@ class MainActivity : AppCompatActivity() {
     private fun publishFakeDataToMQTT(message: String) {
         try {
             // Check if the client is connected before publishing
-            if (mqttAndroidClient.isConnected) {
-                val mqttMessage = MqttMessage(message.toByteArray())
-                mqttMessage.qos = 0 // QoS level 0 (At most once)
-                mqttAndroidClient.publish(TOPIC_NAME, mqttMessage)
-                Log.d("MQTT", "Published message: $message to topic: $TOPIC_NAME")
+            if (!mqttAndroidClient.isConnected) {
+                Log.e("MQTT", "Client not connected. Attempting to reconnect...")
+                mqttAndroidClient.connect(null, object : IMqttActionListener {
+                    override fun onSuccess(asyncActionToken: IMqttToken?) {
+                        Log.d("MQTT", "Reconnected successfully. Now publishing the message.")
+                        publishMessage(message) // Publish after reconnecting
+                    }
+
+                    override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                        Log.e("MQTT", "Failed to reconnect: ${exception?.message}")
+                    }
+                })
             } else {
-                Log.e("MQTT", "Client not connected. Unable to publish message.")
+                publishMessage(message)
             }
         } catch (e: MqttException) {
             e.printStackTrace()
         }
     }
+
+    private fun publishMessage(message: String) {
+        val mqttMessage = MqttMessage(message.toByteArray())
+        mqttMessage.qos = 0 // QoS level 0 (At most once)
+        mqttAndroidClient.publish(TOPIC_NAME, mqttMessage)
+        Log.d("MQTT", "Published message: $message to topic: $TOPIC_NAME")
+    }
+
 
     data class FakeData(
         val heartRate: Int,
