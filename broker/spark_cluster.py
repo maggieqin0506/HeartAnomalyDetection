@@ -9,7 +9,7 @@ spark = SparkSession.builder \
 
 kafka_df = spark.readStream.format("kafka") \
     .option("startingOffsets", "earliest") \
-    .option("kafka.bootstrap.servers", "localhost:9092") \
+    .option("kafka.bootstrap.servers", "kafka:29092") \
     .option("subscribe", "heartbeat") \
     .option("kafka.group.id", "spark_cluster") \
     .load()
