@@ -54,8 +54,6 @@ services:
       - "7077:7077" # Spark master port for workers to connect
     networks:
       - spark-network
-    volumes:
-      - ../broker/spark_cluster.py:/opt/job.py
 
   # Spark Worker Service
   spark-worker:
@@ -83,6 +81,17 @@ services:
       - spark-master
     networks:
       - spark-network
+
+  spark-driver:
+    image: bitnami/spark:latest
+    container_name: spark-driver
+    command: "spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3 --conf spark.driver.extraJavaOptions=-Djava.security.manager=allow --conf spark.executor.extraJavaOptions=-Djava.security.manager=allow /opt/job.py"
+    depends_on:
+      - spark-master
+    networks:
+      - spark-network
+    volumes:
+      - ../broker/spark_job.py:/opt/job.py
 
 networks:
   spark-network:

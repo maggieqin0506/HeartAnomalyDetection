@@ -2,9 +2,6 @@ from pyspark.sql import SparkSession
 
 spark = SparkSession.builder \
     .appName("KafkaStreamProcessing") \
-    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3") \
-    .config("spark.driver.extraJavaOptions", "-Djava.security.manager=allow") \
-    .config("spark.executor.extraJavaOptions", "-Djava.security.manager=allow") \
     .getOrCreate()
 
 kafka_df = spark.readStream.format("kafka") \
@@ -20,7 +17,7 @@ kafka_values = kafka_df.selectExpr("CAST(value AS STRING)")
 query = kafka_values.writeStream \
   .outputMode("append") \
   .format("console") \
-  .option("checkpointLocation", "/tmp/checkpoint") \
+  .option("checkpointLocation", "checkpoint") \
   .start()
 
 query.awaitTermination()
