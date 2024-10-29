@@ -1,7 +1,6 @@
 from paho.mqtt import client as mqtt_client
 import random 
 
-broker = 'localhost'
 port = 1883
 topic = "watch/heartbeat"
 client_id = f'subscribe-{random.randint(0, 100)}'
@@ -16,9 +15,14 @@ def connect_mqtt() -> mqtt_client:
         else:
             print("Failed to connect, return code %d\n", rc)
 
+    def on_log(client, userdata, level, buf):
+        print("log:", buf)
+        
     client = mqtt_client.Client()
     client.on_connect = on_connect
-    client.connect(broker, port)
+
+    client.on_log = on_log
+    client.connect("mqtt5", port, 60)
     return client
 
 def subscribe(client: mqtt_client, kafka_producer: Producer):
@@ -31,11 +35,6 @@ def subscribe(client: mqtt_client, kafka_producer: Producer):
     client.subscribe(topic)
     client.on_message = on_message
 
-
-def connect_kafka_producer():
-    p = Producer({'bootstrap.servers': 'localhost:9092', 'security.protocol': 'PLAINTEXT'})
-    return p
-
 def delivery_callback(err, msg):
         if err:
             print('ERROR: Message failed delivery: {}'.format(err))
@@ -45,7 +44,7 @@ def delivery_callback(err, msg):
 
 def connect_kafka_producer():
     try:
-        p = Producer({'bootstrap.servers': 'localhost:9092'})
+        p = Producer({'bootstrap.servers': 'kafka:29092'})
         print("Connected to Kafka Broker!")
         return p
     except Exception as e:
