@@ -4,6 +4,7 @@ services:
   mqtt5:
     image: eclipse-mosquitto
     container_name: mqtt5
+    hostname: mqtt5
     ports:
       - "1883:1883" #default mqtt port
       - "9001:9001" #default mqtt port for websockets
@@ -11,6 +12,11 @@ services:
       - ./config:/mosquitto/config:rw
       - ./data:/mosquitto/data:rw
       - ./log/mosquitto:/mosquitto/log:rw
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "1883"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
     networks:
       - spark-network
@@ -40,6 +46,11 @@ services:
       - ./log/kafka:/log/kraft-combined-logs
     networks:
       - spark-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "29092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Spark Master Service
   spark-master:
@@ -87,12 +98,27 @@ services:
     container_name: spark-driver
     command: "spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3 --conf spark.driver.extraJavaOptions=-Djava.security.manager=allow --conf spark.executor.extraJavaOptions=-Djava.security.manager=allow /opt/job.py"
     depends_on:
+      - kafka
       - spark-master
     networks:
       - spark-network
     volumes:
       - ../broker/spark_job.py:/opt/job.py
 
+  broker:
+    build:
+      context: ../broker
+      dockerfile: Dockerfile
+    container_name: broker
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mqtt5:
+        condition: service_healthy
+    networks:
+      - spark-network
+    command: "python3 -u broker.py"
+    restart: unless-stopped
 networks:
   spark-network:
     driver: bridge
