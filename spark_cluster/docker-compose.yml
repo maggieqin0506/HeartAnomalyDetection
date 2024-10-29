@@ -12,11 +12,6 @@ services:
       - ./config:/mosquitto/config:rw
       - ./data:/mosquitto/data:rw
       - ./log/mosquitto:/mosquitto/log:rw
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "1883"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - spark-network
@@ -46,11 +41,6 @@ services:
       - ./log/kafka:/log/kraft-combined-logs
     networks:
       - spark-network
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "29092"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # Spark Master Service
   spark-master:
@@ -111,10 +101,8 @@ services:
       dockerfile: Dockerfile
     container_name: broker
     depends_on:
-      kafka:
-        condition: service_healthy
-      mqtt5:
-        condition: service_healthy
+      - kafka
+      - mqtt5
     networks:
       - spark-network
     command: "python3 -u broker.py"
