@@ -12,17 +12,22 @@ mqtt_client.on_publish = on_publish
 mqtt_client.connect('localhost', 1883)
 
 mqtt_client.loop_start()
-i = 0
 while True:
     data = {
-        "heart_rate": 60,
-        "spo2": 98,
-        "temp": 36.5,
-        "timestamp": "2021-07-15 12:00:00",
-        "device_id": i
+        'Age': 45,
+        'Sex': 'M', 
+        'ChestPainType': 'ATA',
+        'RestingBP': 130,
+        'Cholesterol': 250, 
+        'FastingBS': 0,
+        'RestingECG': 'Normal',
+        'MaxHR': 150,
+        'ExerciseAngina': 'N',
+        'Oldpeak': 1.0,
+        'ST_Slope': 'Up'
     }
     info = mqtt_client.publish(topic='watch/heartbeat', payload=json.dumps(data), qos=0)
-    i += 1
+
     info.wait_for_publish()
     print(info.is_published())
     time.sleep(1)

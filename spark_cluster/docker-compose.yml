@@ -50,6 +50,7 @@ services:
       - SPARK_MODE=master
       - SPARK_MASTER_HOST=spark-master
       - SPARK_MASTER_PORT=7077
+    command: /bin/sh -c "pip install pyarrow pandas scikit-learn"
     ports:
       - "8080:8080" # Spark Web UI
       - "7077:7077" # Spark master port for workers to connect
@@ -63,6 +64,7 @@ services:
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
+    command: /bin/sh -c "pip install pyarrow pandas scikit-learn"
     ports:
       - "8081:8081" # Spark Worker Web UI
     depends_on:
@@ -76,6 +78,7 @@ services:
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
+    command: /bin/sh -c "pip install pyarrow pandas scikit-learn"
     ports:
       - "8082:8081" # Spark Worker Web UI
     depends_on:
@@ -86,14 +89,16 @@ services:
   spark-driver:
     image: bitnami/spark:latest
     container_name: spark-driver
-    command: "spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3 --conf spark.driver.extraJavaOptions=-Djava.security.manager=allow --conf spark.executor.extraJavaOptions=-Djava.security.manager=allow /opt/job.py"
+    command: /bin/sh -c "pip install pyarrow pandas scikit-learn && spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3 --conf spark.driver.extraJavaOptions=-Djava.security.manager=allow --conf spark.executor.extraJavaOptions=-Djava.security.manager=allow /opt/job.py"
     depends_on:
       - kafka
       - spark-master
     networks:
       - spark-network
     volumes:
-      - ../broker/spark_job.py:/opt/job.py
+      - ../detection/spark_job.py:/opt/job.py
+      - ../detection/heart_anomaly_detection.model:/opt/heart.model
+      - ../detection/label_encoders.pkl:/opt/label_encoders.pkl
 
   broker:
     build:
@@ -107,6 +112,20 @@ services:
       - spark-network
     command: "python3 -u broker.py"
     restart: unless-stopped
+
+  # test:
+  #   image: spark-driver:latest
+  #   container_name: test
+  #   command: /bin/sh -c "spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3 --conf spark.driver.extraJavaOptions=-Djava.security.manager=allow --conf spark.executor.extraJavaOptions=-Djava.security.manager=allow /opt/job.py"
+  #   depends_on:
+  #     - kafka
+  #     - spark-master
+  #   networks:
+  #     - spark-network
+  #   volumes:
+  #     - ../test/spark_job.py:/opt/job.py
+  #     - ../test/heart_anomaly_detection.model:/opt/heart.model
+  #     - ../test/label_encoders.pkl:/opt/label_encoders.pkl
 networks:
   spark-network:
     driver: bridge

@@ -30,7 +30,7 @@ def subscribe(client: mqtt_client, kafka_producer: Producer):
         print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
         # put data sent from "watch" to kafka's topic
         kafka_producer.produce(topic='heartbeat', key='device_id', value=msg.payload.decode(), callback=delivery_callback)
-        kafka_producer.poll(10000)
+        kafka_producer.poll(0)
         kafka_producer.flush()
     client.subscribe(topic)
     client.on_message = on_message
