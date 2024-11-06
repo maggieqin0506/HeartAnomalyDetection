@@ -45,15 +45,15 @@ def process_batch(batch_df, batch_id):
     # Use your pre-trained model to make predictions
     for column in ['Sex', 'ChestPainType', 'RestingECG', 'ExerciseAngina', 'ST_Slope']:
         pandas_df[column] = label_encoders[column].transform(pandas_df[column])
-
-    predictions = model.predict(pandas_df)
+    if len(pandas_df) > 0:
+        predictions = model.predict(pandas_df)
 
     # Add predictions to the DataFrame
-    pandas_df['predictions'] = predictions
+        pandas_df['predictions'] = predictions
 
     # Optionally, perform further actions, e.g., save to database, push to another Kafka topic, etc.
     # For now, let's just print the predictions
-    print('Res', pandas_df)
+        print('Res', pandas_df)
 
 # Write the stream and apply the model using foreachBatch
 query = kafka_values.writeStream \

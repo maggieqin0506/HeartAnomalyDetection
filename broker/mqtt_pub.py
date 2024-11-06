@@ -14,7 +14,7 @@ mqtt_client.connect('localhost', 1883)
 mqtt_client.loop_start()
 while True:
     data = {
-        'Age': 45,
+        'Age': 60,
         'Sex': 'M', 
         'ChestPainType': 'ATA',
         'RestingBP': 130,
