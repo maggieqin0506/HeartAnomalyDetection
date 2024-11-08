@@ -28,6 +28,8 @@ import org.eclipse.paho.client.mqttv3.MqttClient
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
+import java.lang.Math.sin
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,6 +42,16 @@ class MainActivity : AppCompatActivity() {
     private var keepRunning = true
 
     val TOPIC_NAME = "watch/heartbeat"
+
+    val age = 45
+    val sex = "M"
+    var baselineRestingHeartRate = 70 // Typical resting heart rate
+    var baselineMaxHR = 220 - age     // Maximum heart rate based on age
+    var baselineRestingBP = 120
+    var baselineCholesterol = 200
+    var baselineSystolic = 120
+    var baselineDiastolic = 80
+    var baselineOldpeak = 1.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,7 +122,8 @@ class MainActivity : AppCompatActivity() {
 
                 // Update the UI with the fake data
                 binding.heartRateTextView.text = "Heart Rate: ${fakeData.heartRate} bpm"
-                binding.bloodPressureTextView.text = "Blood Pressure: ${fakeData.systolic}/${fakeData.diastolic} mmHg"
+                binding.bloodPressureTextView.text =
+                    "Blood Pressure: ${fakeData.systolic}/${fakeData.diastolic} mmHg"
                 binding.ageTextView.text = "Age: ${fakeData.age}"
                 binding.sexTextView.text = "Sex: ${fakeData.sex}"
                 binding.chestPainTypeTextView.text = "Chest Pain Type: ${fakeData.chestPainType}"
@@ -163,6 +176,7 @@ class MainActivity : AppCompatActivity() {
         mqttAndroidClient.publish(TOPIC_NAME, mqttMessage)
         Log.d("MQTT", "Published message: $message to topic: $TOPIC_NAME")
     }
+
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -173,8 +187,8 @@ class MainActivity : AppCompatActivity() {
 
 
     data class FakeData(
-        val age: Int = 45,
-        val sex: String = "M",
+        val age: Int,
+        val sex: String,
         val chestPainType: String = "ATA", // ChestPainType ["TA", "ATA", "NAP", ASY"]
         val restingBP: Int,
         val cholesterol: Int,
@@ -196,16 +210,59 @@ class MainActivity : AppCompatActivity() {
             getSharedPreferences("com.example.cardioalert", Context.MODE_PRIVATE)
         val fcmToken = sharedPreferences.getString("fcm_token", null)
 
+        val currentHour = (System.currentTimeMillis() / (1000 * 60 * 60) % 24).toInt()
+        val dailyCycleFactor =
+            sin(currentHour * (Math.PI / 12)) // 24-hour daily cycle for natural fluctuation
+
+        // Simulate realistic ranges and daily variation for each parameter
+        val restingBP = (baselineRestingBP + dailyCycleFactor * 5 + (-3..3).random()).roundToInt()
+            .coerceIn(90, 180)
+        val cholesterol = (baselineCholesterol + (-10..10).random()).coerceIn(125, 350)
+        val fastingBS =
+            if ((70..120).random() >= 120) 1 else 0 // Binary indicator for elevated blood sugar
+        val restingECG =
+            if ((1..100).random() < 5) "Abnormal" else "Normal" // 5% chance of abnormal reading
+        val oldpeak =
+            (baselineOldpeak + dailyCycleFactor * 0.5 + (-0.2 + Math.random() * 0.4)).coerceIn(
+                0.0,
+                5.0
+            )
+        val st_slope = listOf("Up", "Flat", "Down").random()
+        val systolic = (baselineSystolic + dailyCycleFactor * 10 + (-5..5).random()).roundToInt()
+            .coerceIn(90, 140)
+        val diastolic = (baselineDiastolic + dailyCycleFactor * 5 + (-3..3).random()).roundToInt()
+            .coerceIn(60, 90)
+
+        // Realistic heart rate simulation with daily and event-based variation
+        var heartRate =
+            (baselineRestingHeartRate + dailyCycleFactor * 5 + (-2..2).random()).roundToInt()
+        var maxHR = baselineMaxHR // Age-based max heart rate, adjusted during events
+
+        // Simulate an exercise or stress event randomly, which temporarily increases heart rate
+        val exerciseEvent = (1..100).random() < 10 // 10% chance for an exercise event
+        if (exerciseEvent) {
+            heartRate =
+                (baselineRestingHeartRate + 0.7 * (maxHR - baselineRestingHeartRate)).roundToInt()
+                    .coerceIn(60, maxHR)
+            maxHR = baselineMaxHR
+        } else {
+            // Return to baseline gradually if no event
+            baselineRestingHeartRate = (baselineRestingHeartRate - 1).coerceAtLeast(60)
+        }
+
         return FakeData(
-            restingBP = (90..180).random(),
-            cholesterol = (125..350).random(),
-            fastingBS = if ((70..120).random() >= 120) 1 else 0,
-            maxHR = (60..202).random(),
-            oldpeak = (0..60).random() / 10.0,
-            st_slope = listOf("Up", "Flat", "Down").random(),
-            heartRate = (60..100).random(),
-            systolic = (90..140).random(),
-            diastolic = (60..90).random(),
+            age = age,
+            sex = sex,
+            restingBP = restingBP,
+            cholesterol = cholesterol,
+            fastingBS = fastingBS,
+            restingECG = restingECG,
+            maxHR = maxHR,
+            oldpeak = oldpeak,
+            st_slope = st_slope,
+            heartRate = heartRate,
+            systolic = systolic,
+            diastolic = diastolic,
             timestamp = System.currentTimeMillis(),
             fcmToken = fcmToken
         )
