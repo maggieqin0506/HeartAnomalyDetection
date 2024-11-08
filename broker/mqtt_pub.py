@@ -14,18 +14,19 @@ mqtt_client.connect('localhost', 1883)
 mqtt_client.loop_start()
 while True:
     data = {
-        'Age': 60,
-        'Sex': 'M', 
-        'ChestPainType': 'ATA',
-        'RestingBP': 130,
-        'Cholesterol': 250, 
-        'FastingBS': 0,
-        'RestingECG': 'Normal',
-        'MaxHR': 150,
-        'ExerciseAngina': 'N',
-        'Oldpeak': 1.0,
-        'ST_Slope': 'Up'
-    }
+        'Age': 68,              # Older age
+        'Sex': 'M',             
+        'ChestPainType': 'TA',  # Typical Angina (associated with heart disease)
+        'RestingBP': 160,       # High resting blood pressure
+        'Cholesterol': 320,     # High cholesterol level
+        'FastingBS': 1,         # High fasting blood sugar
+        'RestingECG': 'ST',     # Abnormal ECG
+        'MaxHR': 120,           # Lower than normal maximum heart rate
+        'ExerciseAngina': 'Y',  # Exercise-induced angina
+        'Oldpeak': 2.5,         # Higher ST depression
+        'ST_Slope': 'Down',    # Downsloping ST segment,
+        'DEVICE_ID': 'device_1'
+}
     info = mqtt_client.publish(topic='watch/heartbeat', payload=json.dumps(data), qos=0)
 
     info.wait_for_publish()
