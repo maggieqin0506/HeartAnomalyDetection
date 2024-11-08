@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
+    id("com.google.gms.google-services")
 }
 android {
     namespace = "com.example.cardioalert"
@@ -70,6 +71,8 @@ dependencies {
     // For Kotlin, add room-ktx
     implementation("androidx.room:room-ktx:2.5.1")
     implementation("com.jakewharton.timber:timber:5.0.1")
-
-
+    implementation("androidx.core:core-ktx:1.10.1")
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
 }
