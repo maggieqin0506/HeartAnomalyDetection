@@ -1,0 +1,5 @@
+fastapi==0.115.4
+fastapi-cli==0.0.5
+firebase-admin==6.5.0
+pydantic==2.9.2
+pydantic_core==2.23.4

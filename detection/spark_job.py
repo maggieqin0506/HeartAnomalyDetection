@@ -3,6 +3,8 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType, 
 from pyspark.sql.functions import from_json
 import joblib
 import pickle
+import json
+import requests
 
 data_schema = StructType([
     StructField("Age", IntegerType(), True),
@@ -15,7 +17,8 @@ data_schema = StructType([
     StructField("MaxHR", IntegerType(), True),
     StructField("ExerciseAngina", StringType(), True),
     StructField("Oldpeak", FloatType(), True),
-    StructField("ST_Slope", StringType(), True)
+    StructField("ST_Slope", StringType(), True),
+    StructField("DEVICE_ID", StringType(), True)
 ])
 
 spark = SparkSession.builder \
@@ -40,20 +43,46 @@ label_encoders = pickle.load(open('/opt/label_encoders.pkl', 'rb'))
 def process_batch(batch_df, batch_id):
     # Convert the Spark DataFrame to Pandas DataFrame
     pandas_df = batch_df.toPandas()
-    pandas_df = pandas_df.dropna(how='any')
+    pandas_df = pandas_df.dropna(how='any') # drop null datas
     
-    # Use your pre-trained model to make predictions
+    # Use pre-trained model to make prediction
     for column in ['Sex', 'ChestPainType', 'RestingECG', 'ExerciseAngina', 'ST_Slope']:
         pandas_df[column] = label_encoders[column].transform(pandas_df[column])
+    
 
-    predictions = model.predict(pandas_df)
+    print('Res', pandas_df)
+
+   
+    predict_df = pandas_df.drop(columns=['DEVICE_ID'])
+    predictions = model.predict(predict_df)
+
 
     # Add predictions to the DataFrame
-    pandas_df['predictions'] = predictions
+    pandas_df['prediction'] = predictions
 
-    # Optionally, perform further actions, e.g., save to database, push to another Kafka topic, etc.
-    # For now, let's just print the predictions
-    print('Res', pandas_df)
+    # send notification if detection found
+    headers = {"Content-Type": "application/json"}
+    for index, row in pandas_df.iterrows():
+        print('Row', row)
+        if row['prediction'] == 1:
+            payload = {
+                "Age": int(row["Age"]),  # Convert to int because pandas might have it as float
+                "Sex": str(row["Sex"]),
+                "ChestPainType": str(row["ChestPainType"]),
+                "RestingBP": int(row["RestingBP"]),
+                "Cholesterol": int(row["Cholesterol"]),
+                "FastingBS": int(row["FastingBS"]),
+                "RestingECG": str(row["RestingECG"]),
+                "MaxHR": int(row["MaxHR"]),
+                "ExerciseAngina": str(row["ExerciseAngina"]),
+                "Oldpeak": float(row["Oldpeak"]),  # Keep as float
+                "ST_Slope": str(row["ST_Slope"]),
+                "DEVICE_ID": str(row["DEVICE_ID"]),
+                "prediction": int(row["prediction"])
+            }
+            headers = {"Content-Type": "application/json"}
+            requests.post('http://notification:3000/send-notification/', json=payload, headers=headers)
+
 
 # Write the stream and apply the model using foreachBatch
 query = kafka_values.writeStream \
