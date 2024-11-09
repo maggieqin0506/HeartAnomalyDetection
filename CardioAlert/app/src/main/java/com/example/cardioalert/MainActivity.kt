@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.cardioalert.databinding.ActivityMainBinding
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
@@ -49,8 +51,6 @@ class MainActivity : AppCompatActivity() {
     var baselineMaxHR = 220 - age     // Maximum heart rate based on age
     var baselineRestingBP = 120
     var baselineCholesterol = 200
-    var baselineSystolic = 120
-    var baselineDiastolic = 80
     var baselineOldpeak = 1.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,26 +119,19 @@ class MainActivity : AppCompatActivity() {
             while (keepRunning) {
                 // Generate fake data
                 val fakeData = generateFakeData()
+                binding.ageTextView.text = "Age: ${fakeData.Age}"
+                binding.sexTextView.text = "Sex: ${fakeData.Sex}"
+                binding.chestPainTypeTextView.text = "Chest Pain Type: ${fakeData.ChestPainType}"
+                binding.restingBPTextView.text = "Resting BP: ${fakeData.RestingBP} mmHg"
+                binding.cholesterolTextView.text = "Cholesterol: ${fakeData.Cholesterol} mg/dL"
+                binding.fastingBSTextView.text = "Fasting Blood Sugar: ${fakeData.FastingBS}"
+                binding.restingECGTextView.text = "Resting ECG: ${fakeData.RestingECG}"
+                binding.maxHRTextView.text = "Max Heart Rate: ${fakeData.MaxHR} bpm"
+                binding.exerciseAnginaTextView.text = "Exercise Angina: ${fakeData.ExerciseAngina}"
+                binding.oldpeakTextView.text = "Oldpeak: ${fakeData.Oldpeak}"
+                binding.stSlopeTextView.text = "ST Slope: ${fakeData.ST_Slope}"
+                binding.fcmTokenTextView.text = "FCM Token: ${fakeData.DEVICE_ID ?: "N/A"}"
 
-                // Update the UI with the fake data
-                binding.heartRateTextView.text = "Heart Rate: ${fakeData.heartRate} bpm"
-                binding.bloodPressureTextView.text =
-                    "Blood Pressure: ${fakeData.systolic}/${fakeData.diastolic} mmHg"
-                binding.ageTextView.text = "Age: ${fakeData.age}"
-                binding.sexTextView.text = "Sex: ${fakeData.sex}"
-                binding.chestPainTypeTextView.text = "Chest Pain Type: ${fakeData.chestPainType}"
-                binding.restingBPTextView.text = "Resting BP: ${fakeData.restingBP} mmHg"
-                binding.cholesterolTextView.text = "Cholesterol: ${fakeData.cholesterol} mg/dL"
-                binding.fastingBSTextView.text = "Fasting Blood Sugar: ${fakeData.fastingBS}"
-                binding.restingECGTextView.text = "Resting ECG: ${fakeData.restingECG}"
-                binding.maxHRTextView.text = "Max Heart Rate: ${fakeData.maxHR} bpm"
-                binding.exerciseAnginaTextView.text = "Exercise Angina: ${fakeData.exerciseAngina}"
-                binding.oldpeakTextView.text = "Oldpeak: ${fakeData.oldpeak}"
-                binding.stSlopeTextView.text = "ST Slope: ${fakeData.st_slope}"
-                binding.timestampTextView.text = "Timestamp: ${fakeData.timestamp}"
-                binding.fcmTokenTextView.text = "FCM Token: ${fakeData.fcmToken ?: "N/A"}"
-
-                // Convert fake data to JSON and publish
                 val fakeDataJson = Gson().toJson(fakeData)
                 publishFakeDataToMQTT(fakeDataJson)
                 delay(1000L)
@@ -187,28 +180,33 @@ class MainActivity : AppCompatActivity() {
 
 
     data class FakeData(
-        val age: Int,
-        val sex: String,
-        val chestPainType: String = "ATA", // ChestPainType ["TA", "ATA", "NAP", ASY"]
-        val restingBP: Int,
-        val cholesterol: Int,
-        val fastingBS: Int,
-        val restingECG: String = "Normal",
-        val maxHR: Int,
-        val exerciseAngina: String = "N",
-        val oldpeak: Double,
-        val st_slope: String,
-        val heartRate: Int,
-        val systolic: Int,
-        val diastolic: Int,
-        val timestamp: Long,
-        val fcmToken: String? = null // Add FCM token field
+        val Age: Int,
+        val Sex: String,
+        val ChestPainType: String = "ATA", // ChestPainType ["TA", "ATA", "NAP", ASY"]
+        val RestingBP: Int,
+        val Cholesterol: Int,
+        val FastingBS: Int,
+        val RestingECG: String = "Normal",
+        val MaxHR: Int,
+        val ExerciseAngina: String = "N",
+        val Oldpeak: Float,
+        val ST_Slope: String,
+        val DEVICE_ID: String? = null // Add FCM token field
     )
 
     private fun generateFakeData(): FakeData {
         val sharedPreferences =
             getSharedPreferences("com.example.cardioalert", Context.MODE_PRIVATE)
         val fcmToken = sharedPreferences.getString("fcm_token", null)
+        fcmToken?.run {
+            FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    return@OnCompleteListener
+                }
+                val token = task.result
+                val msg = getString(R.string.msg_token_fmt, token)
+            })
+        }
 
         val currentHour = (System.currentTimeMillis() / (1000 * 60 * 60) % 24).toInt()
         val dailyCycleFactor =
@@ -221,29 +219,18 @@ class MainActivity : AppCompatActivity() {
         val fastingBS =
             if ((70..120).random() >= 120) 1 else 0 // Binary indicator for elevated blood sugar
         val restingECG =
-            if ((1..100).random() < 5) "Abnormal" else "Normal" // 5% chance of abnormal reading
+            if ((1..100).random() < 5) "ST" else "Normal" // 5% chance of abnormal reading
         val oldpeak =
             (baselineOldpeak + dailyCycleFactor * 0.5 + (-0.2 + Math.random() * 0.4)).coerceIn(
                 0.0,
                 5.0
-            )
+            ).toFloat()
         val st_slope = listOf("Up", "Flat", "Down").random()
-        val systolic = (baselineSystolic + dailyCycleFactor * 10 + (-5..5).random()).roundToInt()
-            .coerceIn(90, 140)
-        val diastolic = (baselineDiastolic + dailyCycleFactor * 5 + (-3..3).random()).roundToInt()
-            .coerceIn(60, 90)
-
-        // Realistic heart rate simulation with daily and event-based variation
-        var heartRate =
-            (baselineRestingHeartRate + dailyCycleFactor * 5 + (-2..2).random()).roundToInt()
         var maxHR = baselineMaxHR // Age-based max heart rate, adjusted during events
 
         // Simulate an exercise or stress event randomly, which temporarily increases heart rate
         val exerciseEvent = (1..100).random() < 10 // 10% chance for an exercise event
         if (exerciseEvent) {
-            heartRate =
-                (baselineRestingHeartRate + 0.7 * (maxHR - baselineRestingHeartRate)).roundToInt()
-                    .coerceIn(60, maxHR)
             maxHR = baselineMaxHR
         } else {
             // Return to baseline gradually if no event
@@ -251,20 +238,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         return FakeData(
-            age = age,
-            sex = sex,
-            restingBP = restingBP,
-            cholesterol = cholesterol,
-            fastingBS = fastingBS,
-            restingECG = restingECG,
-            maxHR = maxHR,
-            oldpeak = oldpeak,
-            st_slope = st_slope,
-            heartRate = heartRate,
-            systolic = systolic,
-            diastolic = diastolic,
-            timestamp = System.currentTimeMillis(),
-            fcmToken = fcmToken
+            Age = age,
+            Sex = sex,
+            RestingBP = restingBP,
+            Cholesterol = cholesterol,
+            FastingBS = fastingBS,
+            RestingECG = restingECG,
+            MaxHR = maxHR,
+            Oldpeak = oldpeak,
+            ST_Slope = st_slope,
+            DEVICE_ID = fcmToken
         )
     }
 

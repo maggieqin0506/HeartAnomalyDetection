@@ -5,22 +5,6 @@
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/heartRateTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Heart Rate: Waiting for data..."
-        android:textColor="#FF0000"
-        android:textSize="18sp" />
-
-    <TextView
-        android:id="@+id/bloodPressureTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Blood Pressure: Waiting for data..."
-        android:textColor="#0000FF"
-        android:textSize="18sp" />
-
-    <TextView
         android:id="@+id/ageTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -95,13 +79,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="ST Slope: Waiting for data..."
-        android:textSize="18sp" />
-
-    <TextView
-        android:id="@+id/timestampTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Timestamp: Waiting for data..."
         android:textSize="18sp" />
 
     <TextView
