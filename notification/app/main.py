@@ -47,7 +47,7 @@ def send_notification(watch_data: WatchData):
         data = {k: str(v) for k, v in data.items()}
 
     # Send push notification
-    send_push_notification(server_key, device_tokens, title, body, data)
+    send_push_notification(device_tokens, title, body, data)
 
 
 def send_push_notification(device_tokens, title, body, data=None):
