@@ -20,6 +20,11 @@ class WatchData(BaseModel):
     DEVICE_ID: str
     prediction: int
 
+
+server_key = '/code/app/cmpe272-cardio-alert-firebase-adminsdk-tjjgj-d1c198320f.json'
+cred = credentials.Certificate(server_key)
+firebase_admin.initialize_app(cred)
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -28,7 +33,6 @@ async def root():
 def send_notification(watch_data: WatchData):
     print(watch_data)
     # Replace with the path to your service account key JSON file
-    server_key = '/code/app/cmpe272-cardio-alert-firebase-adminsdk-tjjgj-d1c198320f.json'
 
     # Replace with your device tokens
     device_tokens = [
@@ -46,9 +50,8 @@ def send_notification(watch_data: WatchData):
     send_push_notification(server_key, device_tokens, title, body, data)
 
 
-def send_push_notification(server_key, device_tokens, title, body, data=None):
-    cred = credentials.Certificate(server_key)
-    firebase_admin.initialize_app(cred)
+def send_push_notification(device_tokens, title, body, data=None):
+    
 
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
