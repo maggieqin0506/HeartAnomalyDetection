@@ -5,6 +5,13 @@
     android:padding="16dp">
 
     <TextView
+        android:id="@+id/userProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Monitoring..."
+        android:textSize="24sp" />
+
+    <TextView
         android:id="@+id/ageTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -81,11 +88,25 @@
         android:text="ST Slope: Waiting for data..."
         android:textSize="18sp" />
 
+    <ImageView
+        android:id="@+id/emergencyAlertImage"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:layout_centerInParent="true"
+        android:src="@drawable/heart"
+        android:visibility="gone" />
+
+    <!-- Optional TextView for alert message -->
     <TextView
-        android:id="@+id/fcmTokenTextView"
+        android:id="@+id/emergencyAlertText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="FCM Token: Waiting for data..."
-        android:textSize="18sp" />
-
+        android:layout_below="@id/emergencyAlertImage"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
+        android:text="Emergency: Heart Attack Alert!"
+        android:textColor="@android:color/holo_red_dark"
+        android:textSize="20sp"
+        android:visibility="gone" />
 </LinearLayout>

@@ -4,11 +4,18 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.animation.Animation
+import android.view.animation.ScaleAnimation
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
@@ -53,10 +60,22 @@ class MainActivity : AppCompatActivity() {
     var baselineCholesterol = 200
     var baselineOldpeak = 1.0
 
+
+    private val emergencyAlertReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            showEmergencyAlert()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        registerReceiver(
+            emergencyAlertReceiver,
+            IntentFilter("com.example.cardioalert.EMERGENCY_ALERT")
+        )
+
         requestNotificationPermission()
 
         mqttAndroidClient =
@@ -74,6 +93,42 @@ class MainActivity : AppCompatActivity() {
         connectToBroker(mqttConnectOptions)
         startUpdatingFakeData()
     }
+
+    private fun showEmergencyAlert() {
+        // Set the bitmap and ensure visibility
+        val bitmap = BitmapFactory.decodeResource(resources, R.drawable.heart)
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, 100, 100, true) // Scale to 100x100
+        binding.emergencyAlertImage.setImageBitmap(scaledBitmap)
+        binding.emergencyAlertImage.visibility = View.VISIBLE
+        binding.emergencyAlertText.visibility = View.VISIBLE
+
+        // Ensure animation starts after the view is visible
+        binding.emergencyAlertImage.post {
+            // Use ScaleAnimation as an alternative to ObjectAnimator
+            val scaleAnimation = ScaleAnimation(
+                1f, 1.2f,  // Scale from original size to 1.2x
+                1f, 1.2f,  // Scale from original size to 1.2x
+                Animation.RELATIVE_TO_SELF, 0.5f,  // Pivot at the center of X axis
+                Animation.RELATIVE_TO_SELF, 0.5f   // Pivot at the center of Y axis
+            ).apply {
+                duration = 500
+                repeatMode = Animation.REVERSE
+                repeatCount = Animation.INFINITE
+            }
+
+            // Start the animation
+            binding.emergencyAlertImage.startAnimation(scaleAnimation)
+
+            // Stop the animation after 5 seconds
+            binding.emergencyAlertImage.postDelayed({
+                binding.emergencyAlertImage.clearAnimation() // Stop the animation
+                binding.emergencyAlertImage.visibility = View.GONE // Hide the alert image if needed
+                binding.emergencyAlertText.visibility = View.GONE // Hide the alert text if needed
+            }, 5000) // 5 seconds in milliseconds
+        }
+    }
+
+
 
     private fun connectToBroker(options: MqttConnectOptions) {
         try {
@@ -130,7 +185,6 @@ class MainActivity : AppCompatActivity() {
                 binding.exerciseAnginaTextView.text = "Exercise Angina: ${fakeData.ExerciseAngina}"
                 binding.oldpeakTextView.text = "Oldpeak: ${fakeData.Oldpeak}"
                 binding.stSlopeTextView.text = "ST Slope: ${fakeData.ST_Slope}"
-                binding.fcmTokenTextView.text = "FCM Token: ${fakeData.DEVICE_ID ?: "N/A"}"
 
                 val fakeDataJson = Gson().toJson(fakeData)
                 publishFakeDataToMQTT(fakeDataJson)
@@ -204,36 +258,49 @@ class MainActivity : AppCompatActivity() {
                     return@OnCompleteListener
                 }
                 val token = task.result
-                val msg = getString(R.string.msg_token_fmt, token)
+                getString(R.string.msg_token_fmt, token)
             })
         }
 
-        val currentHour = (System.currentTimeMillis() / (1000 * 60 * 60) % 24).toInt()
-        val dailyCycleFactor =
-            sin(currentHour * (Math.PI / 12)) // 24-hour daily cycle for natural fluctuation
+        // Add a 20% chance of generating heart attack-like data for testing
+        val isHeartAttackSimulated = (1..100).random() <= 5
 
-        // Simulate realistic ranges and daily variation for each parameter
-        val restingBP = (baselineRestingBP + dailyCycleFactor * 5 + (-3..3).random()).roundToInt()
-            .coerceIn(90, 180)
-        val cholesterol = (baselineCholesterol + (-10..10).random()).coerceIn(125, 350)
-        val fastingBS =
-            if ((70..120).random() >= 120) 1 else 0 // Binary indicator for elevated blood sugar
+        // Calculate daily cycle factors for natural fluctuation
+        val currentHour = (System.currentTimeMillis() / (1000 * 60 * 60) % 24).toInt()
+        val dailyCycleFactor = sin(currentHour * (Math.PI / 12)) // 24-hour cycle
+
+        // Generate simulated data with or without heart attack-like values
+        val restingBP = if (isHeartAttackSimulated) (180..200).random() else
+            (baselineRestingBP + dailyCycleFactor * 5 + (-3..3).random()).roundToInt()
+                .coerceIn(90, 180)
+
+        val cholesterol = if (isHeartAttackSimulated) (300..400).random() else
+            (baselineCholesterol + (-10..10).random()).coerceIn(125, 350)
+
+        val fastingBS = if (isHeartAttackSimulated) 1 else if ((70..120).random() >= 120) 1 else 0
+
         val restingECG =
-            if ((1..100).random() < 5) "ST" else "Normal" // 5% chance of abnormal reading
-        val oldpeak =
+            if (isHeartAttackSimulated) "ST" else if ((1..100).random() < 5) "ST" else "Normal"
+
+        val oldpeak = if (isHeartAttackSimulated) (2.5 + Math.random() * 2).toFloat() else
             (baselineOldpeak + dailyCycleFactor * 0.5 + (-0.2 + Math.random() * 0.4)).coerceIn(
                 0.0,
                 5.0
             ).toFloat()
-        val st_slope = listOf("Up", "Flat", "Down").random()
-        var maxHR = baselineMaxHR // Age-based max heart rate, adjusted during events
 
-        // Simulate an exercise or stress event randomly, which temporarily increases heart rate
-        val exerciseEvent = (1..100).random() < 10 // 10% chance for an exercise event
+        val st_slope = if (isHeartAttackSimulated) "Down" else listOf("Up", "Flat", "Down").random()
+
+        val maxHR =
+            if (isHeartAttackSimulated) (baselineMaxHR + 20..baselineMaxHR + 40).random() else
+                (baselineMaxHR + dailyCycleFactor * 5).roundToInt().coerceAtMost(baselineMaxHR)
+
+        // Use exercise/stress event logic
+        val exerciseEvent = (1..100).random() < 10
         if (exerciseEvent) {
-            maxHR = baselineMaxHR
+            // Temporarily raise the heart rate due to simulated exercise or stress
+            baselineRestingHeartRate =
+                (baselineRestingHeartRate + (maxHR - baselineRestingHeartRate) * 0.7).roundToInt()
         } else {
-            // Return to baseline gradually if no event
             baselineRestingHeartRate = (baselineRestingHeartRate - 1).coerceAtLeast(60)
         }
 
@@ -245,11 +312,13 @@ class MainActivity : AppCompatActivity() {
             FastingBS = fastingBS,
             RestingECG = restingECG,
             MaxHR = maxHR,
+            ExerciseAngina = if (isHeartAttackSimulated) "Y" else "N",
             Oldpeak = oldpeak,
             ST_Slope = st_slope,
             DEVICE_ID = fcmToken
         )
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
@@ -275,7 +344,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             val title = it.title ?: "Heart Attack Alert"
             val body = it.body ?: "Immediate medical attention required!"
             showNotification(title, body)
+
+            sendBroadcastToActivity(title, body)
         }
+    }
+
+    private fun sendBroadcastToActivity(title: String, body: String) {
+        val intent = Intent("com.example.cardioalert.EMERGENCY_ALERT")
+        intent.putExtra("title", title)
+        intent.putExtra("body", body)
+        sendBroadcast(intent)
     }
 
     private fun showNotification(title: String, message: String) {
