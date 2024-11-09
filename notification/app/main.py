@@ -35,9 +35,10 @@ def send_notification(watch_data: WatchData):
     # Replace with the path to your service account key JSON file
 
     # Replace with your device tokens
-    device_tokens = [
-        watch_data.DEVICE_ID
-    ]
+    device_tokens = watch_data.DEVICE_ID
+
+
+    print(device_tokens)
 
     # Notification details
     title = 'Heart rate alert'
@@ -51,20 +52,16 @@ def send_notification(watch_data: WatchData):
 
 
 def send_push_notification(device_tokens, title, body, data=None):
-    
-
-    message = messaging.MulticastMessage(
+    message = messaging.Message(
         notification=messaging.Notification(
             title=title,
-            body=body
+            body=body,
         ),
-        tokens=device_tokens
+        data=data,
+        token=device_tokens,
     )
-    if data:
-        message.data = data
-
-    response = messaging.send_multicast(message)
-
+    response = messaging.send(message)
+    # Response is a message ID string.
     print("Successfully sent notification:", response)
 
 

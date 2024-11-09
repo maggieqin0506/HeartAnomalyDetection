@@ -25,7 +25,7 @@ while True:
         'ExerciseAngina': 'Y',  # Exercise-induced angina
         'Oldpeak': 2.5,         # Higher ST depression
         'ST_Slope': 'Down',    # Downsloping ST segment,
-        'DEVICE_ID': 'device_1'
+        'DEVICE_ID': 'd_FKbhzHRHaqKkDCIVG_Hp:APA91bHO1CtEPifDj5FkwJJxmPmuBW_FMjcxrRK6nhtnNu7c9BjNFol_BErs7kBt9Xk47JgTTkm76oBvT-KC3tj1ZnjzLStjDDnt0yp5kzCsRpawJ7yZIIw'
 }
     info = mqtt_client.publish(topic='watch/heartbeat', payload=json.dumps(data), qos=0)
 
