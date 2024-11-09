@@ -9,16 +9,106 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Heart Rate: Waiting for data..."
-        android:textSize="18sp"
-        android:textColor="#FF0000" />
+        android:textColor="#FF0000"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/bloodPressureTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Blood Pressure: Waiting for data..."
-        android:textSize="18sp"
         android:textColor="#0000FF"
-        android:layout_marginTop="8dp" />
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/ageTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Age: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/sexTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sex: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/chestPainTypeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chest Pain Type: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/restingBPTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Resting BP: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/cholesterolTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cholesterol: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/fastingBSTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fasting Blood Sugar: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/restingECGTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Resting ECG: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/maxHRTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Max Heart Rate: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/exerciseAnginaTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Exercise Angina: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/oldpeakTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Oldpeak: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/stSlopeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ST Slope: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/timestampTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Timestamp: Waiting for data..."
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/fcmTokenTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="FCM Token: Waiting for data..."
+        android:textSize="18sp" />
 
 </LinearLayout>

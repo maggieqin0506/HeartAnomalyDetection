@@ -5,11 +5,13 @@
     <!-- Internet access permission -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Keep the CPU running even when the screen is off -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Corrected: Permission to access the network state -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Permission to read phone state (may not be needed if you're not using phone state) -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -37,6 +39,14 @@
             android:name="info.mqtt.android.service.MqttService"
             android:enabled="true"
             android:exported="false" />
+
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
     </application>
 
