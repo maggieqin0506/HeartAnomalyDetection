@@ -44,7 +44,7 @@ def process_batch(batch_df, batch_id):
     # Convert the Spark DataFrame to Pandas DataFrame
     pandas_df = batch_df.toPandas()
     pandas_df = pandas_df.dropna(how='any') # drop null datas
-    
+    pandas_df['RestingECG'] = pandas_df['RestingECG'].replace('Abnormal', 'ST')
     # Use pre-trained model to make prediction
     for column in ['Sex', 'ChestPainType', 'RestingECG', 'ExerciseAngina', 'ST_Slope']:
         pandas_df[column] = label_encoders[column].transform(pandas_df[column])
