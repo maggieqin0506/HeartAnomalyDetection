@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
             isCleanSession = true  // Ensures clean session (no cached data)
             connectionTimeout = 30  // Connection timeout in seconds
             keepAliveInterval = 20  // Send ping every 20 seconds to keep the connection alive
-            isAutomaticReconnect = false  // Automatically reconnect if the connection is lost
+            isAutomaticReconnect = true
         }
         mqttConnectOptions.userName = "name"
         mqttConnectOptions.password = "password".toCharArray()
@@ -262,7 +262,7 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-        // Add a 20% chance of generating heart attack-like data for testing
+        // Add a 5% chance of generating heart attack-like data for testing
         val isHeartAttackSimulated = (1..100).random() <= 5
 
         // Calculate daily cycle factors for natural fluctuation
