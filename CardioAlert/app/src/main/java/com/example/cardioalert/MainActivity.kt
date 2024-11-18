@@ -43,7 +43,7 @@ import kotlin.math.roundToInt
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mqttAndroidClient: MqttAndroidClient
-    private val mqttBrokerUrl = "tcp://10.20.9.250:1883"
+    private val mqttBrokerUrl = "tcp://broker.hivemq.com:1883"
     val clientId = MqttClient.generateClientId() // Unique client ID
 
     private lateinit var binding: ActivityMainBinding
@@ -86,8 +86,8 @@ class MainActivity : AppCompatActivity() {
             keepAliveInterval = 20  // Send ping every 20 seconds to keep the connection alive
             isAutomaticReconnect = true
         }
-        mqttConnectOptions.userName = "name"
-        mqttConnectOptions.password = "password".toCharArray()
+//        mqttConnectOptions.userName = "name"
+//        mqttConnectOptions.password = "password".toCharArray()
         mqttConnectOptions.mqttVersion = MqttConnectOptions.MQTT_VERSION_3_1_1
 
         connectToBroker(mqttConnectOptions)
@@ -127,7 +127,6 @@ class MainActivity : AppCompatActivity() {
             }, 5000) // 5 seconds in milliseconds
         }
     }
-
 
 
     private fun connectToBroker(options: MqttConnectOptions) {
