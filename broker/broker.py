@@ -7,7 +7,7 @@ client_id = f'subscribe-{random.randint(0, 100)}'
 
 # kafka
 from confluent_kafka import Producer
-
+client_id = f'python-mqtt-{random.randint(0, 1000)}'
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -18,11 +18,11 @@ def connect_mqtt() -> mqtt_client:
     def on_log(client, userdata, level, buf):
         print("log:", buf)
         
-    client = mqtt_client.Client()
+    client = mqtt_client.Client(client_id=client_id)
     client.on_connect = on_connect
 
     client.on_log = on_log
-    client.connect("mqtt5", port, 60)
+    client.connect("broker.hivemq.com", port, 60)
     return client
 
 def subscribe(client: mqtt_client, kafka_producer: Producer):
